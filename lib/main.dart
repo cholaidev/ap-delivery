@@ -54,6 +54,7 @@ class MilkApp extends StatelessWidget {
             create: (context) => AuthBloc(context.read<AuthRepository>()),
           ),
           BlocProvider(create: (_) => DeliverBlocBloc()),
+          // BlocProvider(create: (_) => DeliverBlocBloc()),
         ],
         child: MaterialApp(
           title: 'Milk Company',
