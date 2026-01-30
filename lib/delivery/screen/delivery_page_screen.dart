@@ -293,13 +293,13 @@ class _DeliveryPageState extends State<DeliveryPage>
                 });
               },
               title: Text(
-                customer['name'] ?? '',
+                "🏠${customer['house_name'] ?? ''}",
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("🏠 ${customer['house_name'] ?? ''}"),
+                  Text("👤 ${customer['name'] ?? ''}"),
                   Text("📞 ${customer['phone'] ?? ''}"),
                   Text(
                     "📍 ${customer['location'] ?? ''}",
