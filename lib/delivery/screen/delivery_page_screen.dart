@@ -255,7 +255,7 @@ class _DeliveryPageState extends State<DeliveryPage>
   Widget _buildDelivery(List items) {
     _allItems = items;
     if (!_isSearching) _filteredItems = items;
-
+    print('metrics items $items');
     if (_filteredItems.isEmpty) {
       return RefreshIndicator(
         onRefresh: _onRefresh,
@@ -280,7 +280,7 @@ class _DeliveryPageState extends State<DeliveryPage>
           final customer = item['customer'];
 
           final checked = selectedDeliveryIds.contains(deliveryId);
-
+          double _d(dynamic v) => double.tryParse(v?.toString() ?? '0') ?? 0;
           return Card(
             child: CheckboxListTile(
               key: ValueKey(deliveryId),
@@ -296,7 +296,8 @@ class _DeliveryPageState extends State<DeliveryPage>
                 "🏠${customer['house_name'] ?? ''}",
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: Column(
+              subtitle: // helpers inline (safe double)
+                  Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text("👤 ${customer['name'] ?? ''}"),
@@ -306,10 +307,29 @@ class _DeliveryPageState extends State<DeliveryPage>
                     style: const TextStyle(color: Colors.grey),
                   ),
                   const SizedBox(height: 4),
+
+                  if (_d(item['cow_milk_quantity']) > 0)
+                    Text(
+                      "🐄 Cow : ${_d(item['cow_milk_quantity']).toStringAsFixed(2)} L",
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+
+                  if (_d(item['buffalo_milk_quantity']) > 0)
+                    Text(
+                      "🐃 Buffalo : ${_d(item['buffalo_milk_quantity']).toStringAsFixed(2)} L",
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+
+                  const SizedBox(height: 2),
+
                   Text(
-                    "${item['milk']} • ${item['quantity']} L",
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    "Total : ${_d(item['total_quantity']).toStringAsFixed(2)} L",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
                   ),
+
                   Text(
                     "Date: ${item['supply']['supply_date']}",
                     style: const TextStyle(fontSize: 12),
@@ -328,17 +348,30 @@ class _DeliveryPageState extends State<DeliveryPage>
   // ===============================
 
   Widget _buildMetrics(List items) {
-    final totalQty = items.fold<num>(0, (s, i) => s + (i['quantity'] ?? 0));
-    final totalCustomers = items.map((i) => i['customer']['id']).toSet().length;
+    // 🔒 SAFE DOUBLE PARSER
+    double _d(dynamic v) => double.tryParse(v?.toString() ?? '0') ?? 0;
 
-    final deliveredItems = items.where((i) => i['is_delivered'] == 1).toList();
-
-    final deliveredQty = deliveredItems.fold<num>(
+    /// 🔹 TOTAL QUANTITY
+    final double totalQty = items.fold<double>(
       0,
-      (s, i) => s + (i['quantity'] ?? 0),
+      (s, i) => s + _d(i['total_quantity']),
     );
 
-    final deliveredCustomers =
+    /// 🔹 TOTAL CUSTOMERS
+    final int totalCustomers =
+        items.map((i) => i['customer']['id']).toSet().length;
+
+    /// 🔹 DELIVERED ITEMS
+    final deliveredItems = items.where((i) => i['is_delivered'] == 1).toList();
+
+    /// 🔹 DELIVERED QUANTITY
+    final double deliveredQty = deliveredItems.fold<double>(
+      0,
+      (s, i) => s + _d(i['total_quantity']),
+    );
+
+    /// 🔹 DELIVERED CUSTOMERS
+    final int deliveredCustomers =
         deliveredItems.map((i) => i['customer']['id']).toSet().length;
 
     return RefreshIndicator(
@@ -347,10 +380,10 @@ class _DeliveryPageState extends State<DeliveryPage>
         padding: const EdgeInsets.all(16),
         children: [
           _metric("Total Customers", totalCustomers.toString()),
-          _metric("Total Milk (L)", totalQty.toString()),
-          const Divider(height: 32),
-          _metric("Delivered Customers", deliveredCustomers.toString()),
-          _metric("Delivered Milk (L)", deliveredQty.toString()),
+          _metric("Total Milk (L)", totalQty.toStringAsFixed(2)),
+          // const Divider(height: 32),
+          // _metric("Delivered Customers", deliveredCustomers.toString()),
+          // _metric("Delivered Milk (L)", deliveredQty.toStringAsFixed(2)),
         ],
       ),
     );
