@@ -43,7 +43,16 @@ class DeliverBlocBloc extends Bloc<DeliverBlocEvent, DeliverBlocState> {
         supplyIds: event.supplyIds,
       );
       emit(DeliverSuccess("Delivered successfully"));
-      add(LoadDeliveryItems(event.employeeId)); // reload
+      final now = DateTime.now();
+      String _fmt(DateTime d) =>
+          "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+      add(
+        LoadDeliveryItems(
+          event.employeeId,
+          fromDate: _fmt(DateTime(now.year, now.month, now.day, 0, 0, 0)),
+          toDate: _fmt(DateTime(now.year, now.month, now.day, 23, 59, 59)),
+        ),
+      ); // reload
     } catch (e) {
       emit(DeliverError(e.toString()));
     }

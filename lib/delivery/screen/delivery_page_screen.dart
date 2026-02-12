@@ -71,7 +71,7 @@ class _DeliveryPageState extends State<DeliveryPage>
         final start = DateTime(now.year, now.month, now.day);
         return DateTimeRange(
           start: start,
-          end: start.add(const Duration(days: 1)),
+          end: DateTime(now.year, now.month, now.day, 23, 59, 59),
         );
 
       case DateFilterType.week:
