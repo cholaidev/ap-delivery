@@ -7,7 +7,7 @@ final class DeliverBlocInitial extends DeliverBlocState {}
 final class DeliverLoading extends DeliverBlocState {}
 
 final class DeliverLoaded extends DeliverBlocState {
-  final List<dynamic> items;
+  final Map<String, dynamic> items;
 
   DeliverLoaded(this.items);
 }

@@ -14,7 +14,7 @@ class DeliverRepository {
     return token;
   }
 
-  Future<List<dynamic>> fetchDeliveryItems({
+  Future<Map<String, dynamic>> fetchDeliveryItems({
     required int employeeId,
     String? filter,
     String? fromDate,
@@ -39,7 +39,7 @@ class DeliverRepository {
 
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
-      return body['data'] ?? [];
+      return body ?? {};
     } else {
       throw Exception('Failed to fetch delivery items');
     }

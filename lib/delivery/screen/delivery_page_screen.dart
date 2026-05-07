@@ -347,64 +347,176 @@ class _DeliveryPageState extends State<DeliveryPage>
   // 📊 METRICS TAB
   // ===============================
 
-  Widget _buildMetrics(List items) {
-    // 🔒 SAFE DOUBLE PARSER
-    double _d(dynamic v) => double.tryParse(v?.toString() ?? '0') ?? 0;
+  Widget _buildMetrics(Map<String, dynamic> data) {
+    final totals = data['totals'];
 
-    /// 🔹 TOTAL QUANTITY
-    final double totalQty = items.fold<double>(
-      0,
-      (s, i) => s + _d(i['total_quantity']),
-    );
+    final delivered = data['delivered'];
 
-    /// 🔹 TOTAL CUSTOMERS
-    final int totalCustomers =
-        items.map((i) => i['customer']['id']).toSet().length;
-
-    /// 🔹 DELIVERED ITEMS
-    final deliveredItems = items.where((i) => i['is_delivered'] == 1).toList();
-
-    /// 🔹 DELIVERED QUANTITY
-    final double deliveredQty = deliveredItems.fold<double>(
-      0,
-      (s, i) => s + _d(i['total_quantity']),
-    );
-
-    /// 🔹 DELIVERED CUSTOMERS
-    final int deliveredCustomers =
-        deliveredItems.map((i) => i['customer']['id']).toSet().length;
+    final undelivered = data['undelivered'];
 
     return RefreshIndicator(
       onRefresh: _onRefresh,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _metric("Total Customers", totalCustomers.toString()),
-          _metric("Total Milk (L)", totalQty.toStringAsFixed(2)),
-          // const Divider(height: 32),
-          // _metric("Delivered Customers", deliveredCustomers.toString()),
-          // _metric("Delivered Milk (L)", deliveredQty.toStringAsFixed(2)),
+          /// 🔹 TOTAL
+          _sectionTitle("Total Summary", Icons.analytics, Colors.blue),
+
+          _metric(
+            "Total Customers",
+            totals['customers'].toString(),
+            Icons.people,
+            Colors.blue,
+          ),
+
+          _metric(
+            "Total Cow Milk (L)",
+            totals['cow_milk'].toString(),
+            Icons.water_drop,
+            Colors.green,
+          ),
+
+          _metric(
+            "Total Buffalo Milk (L)",
+            totals['buffalo_milk'].toString(),
+            Icons.opacity,
+            Colors.deepPurple,
+          ),
+
+          _metric(
+            "Total Quantity (L)",
+            totals['total_quantity'].toString(),
+            Icons.local_drink,
+            Colors.orange,
+          ),
+
+          const SizedBox(height: 16),
+
+          /// 🔹 DELIVERED
+          _sectionTitle("Delivered", Icons.check_circle, Colors.green),
+
+          _metric(
+            "Delivered Customers",
+            delivered['customers'].toString(),
+            Icons.people_alt,
+            Colors.green,
+          ),
+
+          _metric(
+            "Delivered Cow Milk (L)",
+            delivered['cow_milk'].toString(),
+            Icons.water_drop,
+            Colors.green,
+          ),
+
+          _metric(
+            "Delivered Buffalo Milk (L)",
+            delivered['buffalo_milk'].toString(),
+            Icons.opacity,
+            Colors.teal,
+          ),
+
+          _metric(
+            "Delivered Quantity (L)",
+            delivered['total_quantity'].toString(),
+            Icons.local_shipping,
+            Colors.green,
+          ),
+
+          const SizedBox(height: 16),
+
+          /// 🔹 UNDELIVERED
+          _sectionTitle("Undelivered", Icons.pending_actions, Colors.red),
+
+          _metric(
+            "Undelivered Customers",
+            undelivered['customers'].toString(),
+            Icons.people_outline,
+            Colors.red,
+          ),
+
+          _metric(
+            "Undelivered Cow Milk (L)",
+            undelivered['cow_milk'].toString(),
+            Icons.water_drop_outlined,
+            Colors.red,
+          ),
+
+          _metric(
+            "Undelivered Buffalo Milk (L)",
+            undelivered['buffalo_milk'].toString(),
+            Icons.opacity,
+            Colors.deepOrange,
+          ),
+
+          _metric(
+            "Undelivered Quantity (L)",
+            undelivered['total_quantity'].toString(),
+            Icons.warning_amber,
+            Colors.red,
+          ),
         ],
       ),
     );
   }
 
-  Widget _metric(String label, String value) {
+  Widget _sectionTitle(String title, IconData icon, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, top: 8),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: color.withOpacity(0.15),
+            child: Icon(icon, color: color, size: 20),
+          ),
+
+          const SizedBox(width: 10),
+
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metric(String label, String value, IconData icon, Color color) {
     return Card(
+      elevation: 3,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ListTile(
-        title: Text(label),
-        trailing: Text(
-          value,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.green,
-            fontSize: 18,
+        leading: CircleAvatar(
+          backgroundColor: color.withOpacity(0.15),
+          child: Icon(icon, color: color),
+        ),
+
+        title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+
+        trailing: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: color,
+              fontSize: 17,
+            ),
           ),
         ),
       ),
     );
   }
-
   // ===============================
   // 🔐 LOGOUT
   // ===============================
@@ -502,10 +614,15 @@ class _DeliveryPageState extends State<DeliveryPage>
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (state is DeliverLoaded) {
+                  final data = state.items;
                   return TabBarView(
                     controller: _tabController,
                     children: [
-                      _buildDelivery(state.items),
+                      _buildDelivery(
+                        List<Map<String, dynamic>>.from(
+                          data['undelivered']['items'],
+                        ),
+                      ),
                       _buildMetrics(state.items),
                     ],
                   );
